@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:torch_light/torch_light.dart';
 import 'package:touch_light/controller.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,21 +17,61 @@ class HomeScreen extends StatefulWidget {
 class _MyWidgetState extends State<HomeScreen> {
 
   LightController lightController = Get.put(LightController());
+  late bool isTorchAvailable;
+
+  @override
+  void initState() {
+    super.initState();
+    checkTorchAvailability();
+  }
+
+  void checkTorchAvailability() async {
+    isTorchAvailable = await deviceTouchLightCheck();
+    setState(() {});
+  }
+
+  Future<bool> deviceTouchLightCheck() async {
+    try {
+      return await TorchLight.isTorchAvailable();
+    } on Exception catch (_) {
+      log('isTorchAvailable: false');
+      return false;
+    }
+  }
+
+
+
+  Future<bool> lightOf() async {
+    try {
+      return await TorchLight.isTorchAvailable();
+    } on Exception catch (_) {
+      log('isTorchAvailable: false');
+      return false;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Container(
-          height: 100,
-          width: 50,
+          height: 200,
+          width: 100,
           color: Colors.red,
           child: Column(
             children: [
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    lightController.isFlashOn.value = !lightController.isFlashOn.value;
+                  onTap: () async {
+                    lightController.isFlashOn.value = true;
+                      log(isTorchAvailable.toString());
+                    try {
+                      await TorchLight.enableTorch();
+                    } on Exception catch (e) {
+                     log(e.toString());
+                    }
+
                   },
                   child:Obx(() {
                     return Container(
@@ -50,11 +93,15 @@ class _MyWidgetState extends State<HomeScreen> {
                   )
                 ),
               ),
-              
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    lightController.isFlashOn.value = !lightController.isFlashOn.value;
+                  onTap: () async {
+                    lightController.isFlashOn.value = false;
+                    try {
+                      await TorchLight.disableTorch();
+                    } on Exception catch (e) {
+                      log(e.toString());
+                    }
                   },
                   child:Obx(() {
                     return Container(
